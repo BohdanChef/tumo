@@ -2,7 +2,6 @@ function setup(){
 createCanvas(400, 600);
 Game.addCommonBalloon()
 }
-
 function draw() {
 
     background('orange')
@@ -15,6 +14,7 @@ function draw() {
         if (balloon.y < balloon.size / 2 && balloon.color != 'black' && balloon.color != 'gold') {
 
             noLoop()
+            clearInterval(interval)
             Game.balloons.length = 0 
             background (136, 220, 166);
             let finalScore = Game.score
@@ -51,12 +51,23 @@ function mousePressed() {
     if (!isLooping()) {
         loop()
         Game.score = 0
+        interval = interval = setInterval(() => {
+            Game.sendStatistics();
+         }, 5000)
     }
     Game.checkIfBalloonBurst()
 }
 
+let interval = setInterval(() => {
+   Game.sendStatistics();
+}, 5000)
+
 class Game {
     static balloons = []
+    static commonBurst = 0;
+    static uniqBurst = 0;
+    static angryBurst = 0;
+
     static score = 0
 
     static addCommonBalloon () {
@@ -87,6 +98,24 @@ class Game {
             }
         })
     }
+
+static sendStatistics() {
+    let statistics = {
+        commonBurst: this.commonBurst,
+        uniqBurst: this.uniqBurst,
+        angryBurst: this.angryBurst,
+        score: this.score,
+    };
+
+    fetch('/statistics', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(statistics)
+    });
+}
+
 }
 
 class CommonBalloon {
@@ -117,6 +146,7 @@ class CommonBalloon {
     burst(index) {
         Game.balloons.splice(index, 1)
         Game.score +=1
+        Game.commonBurst += 1
     }
 }
 
@@ -128,6 +158,7 @@ class UniqBalloon extends CommonBalloon {
     burst(index) {
         Game.balloons.splice(index, 1)
         Game.score +=10
+        Game.uniqBurst += 1
     }
 }
 
@@ -139,6 +170,7 @@ class AngryBalloon extends CommonBalloon {
     burst(index) {
         Game.balloons.splice(index, 1)
         Game.score -=15
+        Game.angryBurst += 1
     }
 }
 
@@ -177,4 +209,5 @@ class RandomBalloon {
 
 
 
-
+// let a = 5;
+// console.log(a);
